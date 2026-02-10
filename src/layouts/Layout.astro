@@ -6,18 +6,92 @@
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>Valorant Store Tracker</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
 	</head>
 	<body>
 		<slot />
 	</body>
 </html>
 
-<style>
+<style is:global>
+	:root {
+		--val-red: #ff4655;
+		--val-dark: #0f1923;
+		--val-gray: #1f2326;
+		--val-white: #ece8e1;
+		--val-card-bg: rgba(255, 255, 255, 0.05);
+		--val-border: rgba(255, 255, 255, 0.1);
+	}
+
 	html,
 	body {
 		margin: 0;
+		padding: 0;
 		width: 100%;
 		height: 100%;
+		background-color: var(--val-dark);
+		background-image: 
+			radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
+		background-size: 40px 40px;
+		color: var(--val-white);
+		font-family: 'Outfit', sans-serif;
+		overflow-x: hidden;
+	}
+
+	body::before {
+		content: '';
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: 
+			linear-gradient(45deg, transparent 48%, var(--val-red) 49%, var(--val-red) 51%, transparent 52%),
+			linear-gradient(-45deg, transparent 48%, var(--val-red) 49%, var(--val-red) 51%, transparent 52%);
+		background-size: 100px 100px;
+		opacity: 0.02;
+		pointer-events: none;
+		z-index: -1;
+	}
+
+	* {
+		box-sizing: border-box;
+	}
+
+	h1, h2, h3 {
+		text-transform: uppercase;
+		font-weight: 900;
+		letter-spacing: 0.1em;
+	}
+
+	.glass {
+		background: rgba(255, 255, 255, 0.03);
+		backdrop-filter: blur(12px);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 4px;
+		box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+	}
+
+	.accent-text {
+		color: var(--val-red);
+		text-shadow: 0 0 10px rgba(255, 70, 85, 0.5);
+	}
+
+	@keyframes fadeInUp {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.animate-fade-in {
+		animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 	}
 </style>

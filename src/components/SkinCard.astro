@@ -1,0 +1,109 @@
+---
+interface Props {
+	name: string;
+	price: number;
+	image: string;
+	rarity: 'Select' | 'Deluxe' | 'Premium' | 'Ultra' | 'Exclusive';
+}
+
+const { name, price, image, rarity } = Astro.props;
+
+const rarityColors = {
+	Select: '#00ccff',
+	Deluxe: '#00ff99',
+	Premium: '#d151ff',
+	Ultra: '#f9994c',
+	Exclusive: '#ff4655',
+};
+
+const color = rarityColors[rarity] || '#ffffff';
+---
+
+<div class="skin-card glass" style={`--rarity-color: ${color}`}>
+	<div class="rarity-bar"></div>
+	<div class="image-container">
+		<img src={image} alt={name} loading="lazy" />
+	</div>
+	<div class="info">
+		<h3 class="name">{name}</h3>
+		<div class="price-tag">
+			<img src="https://media.valorant-api.com/currencies/85ad13f7-3d1b-5128-9eb2-7cd8ee0b1c89/displayicon.png" alt="VP" class="vp-icon" />
+			<span>{price}</span>
+		</div>
+	</div>
+</div>
+
+<style>
+	.skin-card {
+		position: relative;
+		overflow: hidden;
+		transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+		aspect-ratio: 4/3;
+		display: flex;
+		flex-direction: column;
+		cursor: pointer;
+	}
+
+	.skin-card:hover {
+		transform: translateY(-5px) scale(1.02);
+		border-color: var(--rarity-color);
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(var(--rarity-color), 0.2);
+	}
+
+	.rarity-bar {
+		height: 4px;
+		width: 100%;
+		background-color: var(--rarity-color);
+		box-shadow: 0 0 10px var(--rarity-color);
+	}
+
+	.image-container {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1rem;
+		position: relative;
+	}
+
+	img {
+		max-width: 90%;
+		max-height: 80%;
+		object-fit: contain;
+		filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+		transition: transform 0.5s ease;
+	}
+
+	.skin-card:hover img {
+		transform: scale(1.1);
+	}
+
+	.info {
+		padding: 1rem;
+		background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-end;
+	}
+
+	.name {
+		margin: 0;
+		font-size: 0.9rem;
+		max-width: 70%;
+		line-height: 1.2;
+		color: var(--val-white);
+	}
+
+	.price-tag {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-weight: 700;
+		font-size: 1rem;
+	}
+
+	.vp-icon {
+		width: 18px;
+		height: 18px;
+	}
+</style>

@@ -1,0 +1,102 @@
+---
+import SkinCard from './SkinCard.astro';
+
+const dailySkins = [
+	{
+		name: 'Reaver Vandal',
+		price: 1775,
+		rarity: 'Premium',
+		image: 'https://media.valorant-api.com/weaponskinlevels/06eb248e-4a6f-6c17-6401-4ebb66c72956/displayicon.png'
+	},
+	{
+		name: 'Prime Phantom',
+		price: 1775,
+		rarity: 'Premium',
+		image: 'https://media.valorant-api.com/weaponskinlevels/9fcbc9e0-4767-f4ad-9817-48a0443d3b6f/displayicon.png'
+	},
+	{
+		name: 'Elderflame Operator',
+		price: 2475,
+		rarity: 'Ultra',
+		image: 'https://media.valorant-api.com/weaponskinlevels/0fdf6e72-4f10-d096-7d1c-ec9dd8b2915c/displayicon.png'
+	},
+	{
+		name: 'Gaia\'s Vengeance Ghost',
+		price: 1275,
+		rarity: 'Premium',
+		image: 'https://media.valorant-api.com/weaponskinlevels/785897e9-4e78-024a-9db6-32906e3aca89/displayicon.png'
+	}
+];
+---
+
+<section class="store-grid-container">
+	<div class="grid-header">
+		<h2>Ofertas Diarias</h2>
+		<div class="timer">
+			<span class="label">Termina en:</span>
+			<span class="time accent-text">14:23:45</span>
+		</div>
+	</div>
+	
+	<div class="grid">
+		{dailySkins.map(skin => (
+			<SkinCard {...skin} />
+		))}
+	</div>
+</section>
+
+<style>
+	.store-grid-container {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 2rem;
+	}
+
+	.grid-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1.5rem;
+	}
+
+	h2 {
+		margin: 0;
+		font-size: 1.5rem;
+	}
+
+	.timer {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-weight: 700;
+	}
+
+	.label {
+		text-transform: uppercase;
+		font-size: 0.8rem;
+		opacity: 0.6;
+	}
+
+	.time {
+		font-size: 1.2rem;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: 1.5rem;
+	}
+
+	@media (max-width: 768px) {
+		.grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (max-width: 480px) {
+		.grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
