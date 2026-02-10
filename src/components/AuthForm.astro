@@ -22,7 +22,7 @@
 		<div class="input-group">
 			<label for="shard">Región</label>
 			<select id="shard" required>
-				<option value="eu">EU (Europa)</option>
+				<option value="euw">EU (Europa)</option>
 				<option value="na">NA (Norteamérica)</option>
 				<option value="ap">AP (Asia-Pacífico)</option>
 				<option value="kr">KR (Corea)</option>
@@ -186,7 +186,7 @@
 	const subtitle = document.getElementById('form-subtitle');
 	const backBtn = document.getElementById('back-to-login');
 
-	let currentShard = 'eu';
+	let currentShard = 'euw';
 
 	loginForm.addEventListener('submit', async (e) => {
 		e.preventDefault();
