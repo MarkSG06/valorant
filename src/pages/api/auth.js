@@ -5,16 +5,22 @@ export const POST = async ({ request }) => {
         const body = await request.json();
         const type = body?.type;
 
-        console.log(`[API Auth] Received request:`, { type, keys: Object.keys(body || {}) });
+        // Realistic User-Agent to avoid Riot's bot detection/location filtering
+        const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36';
+
+        console.log(`[API Auth] Incoming ${type} request...`);
 
         if (type === 'login') {
             const { username, password } = body;
 
-            // 1. Init Session
-            console.log('[API Auth] Initializing Riot session...');
+            // 1. Initial Session Handshake (Get Cookies)
+            // We use the same parameters as the official Valorant client login
             const initResponse = await fetch('https://auth.riotgames.com/api/v1/authorization', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'User-Agent': USER_AGENT
+                },
                 body: JSON.stringify({
                     client_id: 'play-valorant-web-prod',
                     nonce: '1',
@@ -26,27 +32,33 @@ export const POST = async ({ request }) => {
 
             const cookies = initResponse.headers.get('set-cookie');
             if (!cookies) {
-                console.error('[API Auth] No cookies received from Riot Init');
-                return new Response(JSON.stringify({ error: 'Riot did not return session cookies.' }), { status: 502 });
+                console.error('[API Auth] No cookies from Init');
+                return new Response(JSON.stringify({ error: 'No se pudo iniciar sesión con Riot (Cookies missing).' }), { status: 502 });
             }
 
-            // 2. Auth with credentials
-            console.log('[API Auth] Submitting credentials to Riot...');
+            // 2. Submit Credentials
             const authResponse = await fetch('https://auth.riotgames.com/api/v1/authorization', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Cookie': cookies
+                    'Cookie': cookies,
+                    'User-Agent': USER_AGENT
                 },
-                body: JSON.stringify({ type: 'auth', username, password, remember: true })
+                body: JSON.stringify({
+                    type: 'auth',
+                    username,
+                    password,
+                    remember: true,
+                    language: 'es_ES' // Force Spanish locale
+                })
             });
 
             const result = await authResponse.json();
             const setCookies = authResponse.headers.get('set-cookie');
 
-            console.log('[API Auth] Riot response type:', result.type || result.error || 'success');
+            console.log('[API Auth] Result:', result.type || result.error || 'success');
 
-            // Return Riot's response along with its status code
+            // Return Riot's response and cookies (important for MFA step)
             return new Response(JSON.stringify(result), {
                 status: authResponse.status,
                 headers: {
@@ -60,12 +72,12 @@ export const POST = async ({ request }) => {
             const { code } = body;
             const cookies = request.headers.get('cookie');
 
-            console.log('[API Auth] Submitting MFA code...');
             const mfaResponse = await fetch('https://auth.riotgames.com/api/v1/authorization', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Cookie': cookies
+                    'Cookie': cookies,
+                    'User-Agent': USER_AGENT
                 },
                 body: JSON.stringify({ type: 'mfa', code, remember: true })
             });
@@ -82,14 +94,10 @@ export const POST = async ({ request }) => {
             });
         }
 
-        console.warn('[API Auth] Invalid type received:', type);
-        return new Response(JSON.stringify({
-            error: `Invalid type: ${type}`,
-            received: body
-        }), { status: 400 });
+        return new Response(JSON.stringify({ error: 'Tipo de petición inválido' }), { status: 400 });
 
     } catch (err) {
-        console.error('[API Auth] Fatal Error:', err.message);
-        return new Response(JSON.stringify({ error: `Server error: ${err.message}` }), { status: 500 });
+        console.error('[API Auth] Catch Error:', err.message);
+        return new Response(JSON.stringify({ error: `Fallo del servidor: ${err.message}` }), { status: 500 });
     }
 };
