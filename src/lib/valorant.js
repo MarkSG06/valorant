@@ -1,6 +1,82 @@
 const VALORANT_API_BASE = 'https://valorant-api.com/v1';
 
 /**
+ * Initiates the Riot login flow via our proxy
+ */
+export async function loginToRiot(username, password) {
+    // 1. Initialize session
+    await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'init' })
+    });
+
+    // 2. Submit credentials
+    const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'auth', username, password })
+    });
+
+    return await response.json();
+}
+
+/**
+ * Submits the MFA code to complete the login
+ */
+export async function submitMfaCode(code) {
+    const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'mfa', code })
+    });
+
+    return await response.json();
+}
+
+/**
+ * Extracts Puuid, AccessToken from the final auth response location
+ */
+export function parseAuthParams(uri) {
+    const params = new URLSearchParams(uri.split('#')[1]);
+    return {
+        accessToken: params.get('access_token'),
+        idToken: params.get('id_token'),
+        expires: params.get('expires_in')
+    };
+}
+
+/**
+ * Gets the entitlements token from Riot
+ */
+export async function getEntitlementsToken(accessToken) {
+    const response = await fetch('https://entitlements.auth.riotgames.com/api/token/v1', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+    });
+    const data = await response.json();
+    return data.entitlements_token;
+}
+
+/**
+ * Gets the Player UUID from the access token (JWT decode)
+ */
+export function getPuuidFromToken(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    const payload = JSON.parse(jsonPayload);
+    return payload.sub;
+}
+
+/**
  * Fetches all weapon skins from valorant-api.com
  */
 export async function getAllSkins() {

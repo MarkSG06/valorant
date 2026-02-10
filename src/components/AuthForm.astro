@@ -3,13 +3,24 @@
 
 <div class="auth-container glass animate-fade-in" id="auth-form-container">
 	<div class="auth-header">
-		<h3>Conectar Cuenta</h3>
-		<p>Introduce tus tokens de Riot para ver tu tienda real.</p>
+		<h3 id="form-title">Iniciar Sesión</h3>
+		<p id="form-subtitle">Usa tus credenciales de Riot Games.</p>
 	</div>
 	
-	<form id="auth-form">
+	<!-- Principal Login Form -->
+	<form id="login-form">
 		<div class="input-group">
-			<label for="shard">Región (Shard)</label>
+			<label for="username">Nombre de Usuario</label>
+			<input type="text" id="username" placeholder="Tu usuario..." required />
+		</div>
+
+		<div class="input-group">
+			<label for="password">Contraseña</label>
+			<input type="password" id="password" placeholder="••••••••" required />
+		</div>
+
+		<div class="input-group">
+			<label for="shard">Región</label>
 			<select id="shard" required>
 				<option value="eu">EU (Europa)</option>
 				<option value="na">NA (Norteamérica)</option>
@@ -20,37 +31,37 @@
 			</select>
 		</div>
 
-		<div class="input-group">
-			<label for="puuid">Player UUID (PUUID)</label>
-			<input type="text" id="puuid" placeholder="Tu PUUID..." required />
-		</div>
-
-		<div class="input-group">
-			<label for="bearer">Bearer Token</label>
-			<textarea id="bearer" rows="3" placeholder="Comienza con eyJhbG..." required></textarea>
-		</div>
-
-		<div class="input-group">
-			<label for="entitlements">Entitlements Token</label>
-			<textarea id="entitlements" rows="3" placeholder="Comienza con eyJhbG..." required></textarea>
-		</div>
-
 		<div class="actions">
-			<button type="submit" class="btn-primary">Sincronizar Tienda</button>
-			<button type="button" id="clear-auth" class="btn-secondary">Limpiar Datos</button>
+			<button type="submit" class="btn-primary" id="login-submit">Entrar</button>
 		</div>
 	</form>
 
+	<!-- MFA Form (Hidden by default) -->
+	<form id="mfa-form" class="hide">
+		<div class="input-group">
+			<label for="mfa-code">Código de Email (2FA)</label>
+			<input type="text" id="mfa-code" placeholder="Código de 6 dígitos..." maxlength="6" />
+		</div>
+		<div class="actions">
+			<button type="submit" class="btn-primary">Verificar Código</button>
+			<button type="button" id="back-to-login" class="btn-secondary">Volver</button>
+		</div>
+	</form>
+
+	<div id="auth-loading" class="hide">
+		<p class="accent-text">Procesando...</p>
+	</div>
+
 	<div class="help-text">
-		<p>¿No sabes cómo conseguir los tokens? <a href="https://github.com/techchrism/valorant-api-docs" target="_blank">Consulta esta guía</a>.</p>
+		<p>Tus datos se envían directamente a Riot. No guardamos tu contraseña.</p>
 	</div>
 </div>
 
 <style>
 	.auth-container {
-		max-width: 600px;
+		max-width: 450px;
 		margin: 2rem auto;
-		padding: 2rem;
+		padding: 2.5rem;
 	}
 
 	.auth-header {
@@ -60,13 +71,14 @@
 
 	.auth-header h3 {
 		margin: 0;
-		font-size: 1.2rem;
-		color: var(--val-red);
+		font-size: 1.5rem;
+		color: var(--val-white);
 	}
 
 	.auth-header p {
 		opacity: 0.6;
 		font-size: 0.9rem;
+		margin-top: 0.5rem;
 	}
 
 	.input-group {
@@ -77,26 +89,30 @@
 	}
 
 	label {
-		font-size: 0.8rem;
+		font-size: 0.75rem;
 		text-transform: uppercase;
-		font-weight: 700;
-		opacity: 0.8;
+		font-weight: 900;
+		opacity: 0.5;
+		letter-spacing: 1px;
 	}
 
-	select, input, textarea {
-		background: rgba(0, 0, 0, 0.3);
+	select, input {
+		background: rgba(0, 0, 0, 0.4);
 		border: 1px solid var(--val-border);
 		border-radius: 4px;
-		padding: 0.8rem;
+		padding: 1rem;
 		color: var(--val-white);
 		font-family: inherit;
 		width: 100%;
+		font-size: 1rem;
+		transition: all 0.3s;
 	}
 
-	select:focus, input:focus, textarea:focus {
+	select:focus, input:focus {
 		outline: none;
 		border-color: var(--val-red);
-		box-shadow: 0 0 10px rgba(255, 70, 85, 0.2);
+		box-shadow: 0 0 15px rgba(255, 70, 85, 0.2);
+		background: rgba(0, 0, 0, 0.6);
 	}
 
 	.actions {
@@ -107,25 +123,28 @@
 
 	button {
 		flex: 1;
-		padding: 1rem;
-		border-radius: 4px;
+		padding: 1.2rem;
+		border-radius: 2px;
 		font-weight: 900;
 		text-transform: uppercase;
 		cursor: pointer;
-		transition: all 0.2s;
+		transition: all 0.3s;
 		font-family: inherit;
+		letter-spacing: 2px;
 	}
 
 	.btn-primary {
 		background: var(--val-red);
 		color: white;
 		border: none;
+		position: relative;
+		overflow: hidden;
 	}
 
 	.btn-primary:hover {
 		background: #ff5e6a;
 		transform: translateY(-2px);
-		box-shadow: 0 5px 15px rgba(255, 70, 85, 0.4);
+		box-shadow: 0 5px 20px rgba(255, 70, 85, 0.4);
 	}
 
 	.btn-secondary {
@@ -138,53 +157,128 @@
 		background: rgba(255, 255, 255, 0.05);
 	}
 
-	.help-text {
-		margin-top: 1.5rem;
+	#auth-loading {
 		text-align: center;
-		font-size: 0.8rem;
-		opacity: 0.5;
+		margin-top: 1rem;
+		font-weight: 700;
+		letter-spacing: 2px;
+		text-transform: uppercase;
 	}
 
-	.help-text a {
-		color: var(--val-red);
-		text-decoration: none;
-	}
+	.hide { display: none !important; }
 
-	.help-text a:hover {
-		text-decoration: underline;
+	.help-text {
+		margin-top: 2rem;
+		text-align: center;
+		font-size: 0.75rem;
+		opacity: 0.4;
+		line-height: 1.4;
 	}
 </style>
 
 <script>
-	const form = document.getElementById('auth-form');
-	const clearBtn = document.getElementById('clear-auth');
+	import { loginToRiot, submitMfaCode, parseAuthParams, getEntitlementsToken, getPuuidFromToken } from '../lib/valorant.js';
 
-	// Load existing data
-	window.addEventListener('DOMContentLoaded', () => {
-		const authData = JSON.parse(localStorage.getItem('val_auth') || '{}');
-		if (authData.shard) document.getElementById('shard').value = authData.shard;
-		if (authData.puuid) document.getElementById('puuid').value = authData.puuid;
-		if (authData.bearer) document.getElementById('bearer').value = authData.bearer;
-		if (authData.entitlements) document.getElementById('entitlements').value = authData.entitlements;
-	});
+	const loginForm = document.getElementById('login-form');
+	const mfaForm = document.getElementById('mfa-form');
+	const loading = document.getElementById('auth-loading');
+	const title = document.getElementById('form-title');
+	const subtitle = document.getElementById('form-subtitle');
+	const backBtn = document.getElementById('back-to-login');
 
-	form.addEventListener('submit', (e) => {
+	let currentShard = 'eu';
+
+	loginForm.addEventListener('submit', async (e) => {
 		e.preventDefault();
-		const data = {
-			shard: document.getElementById('shard').value,
-			puuid: document.getElementById('puuid').value,
-			bearer: document.getElementById('bearer').value,
-			entitlements: document.getElementById('entitlements').value
-		};
-		localStorage.setItem('val_auth', JSON.stringify(data));
-		window.dispatchEvent(new CustomEvent('auth-updated'));
-		alert('¡Datos guardados! Intentando sincronizar...');
+		const user = document.getElementById('username').value;
+		const pass = document.getElementById('password').value;
+		currentShard = document.getElementById('shard').value;
+
+		setLoading(true);
+
+		try {
+			const result = await loginToRiot(user, pass);
+			handleAuthResult(result);
+		} catch (err) {
+			alert('Error de conexión: ' + err.message);
+			setLoading(false);
+		}
 	});
 
-	clearBtn.addEventListener('click', () => {
-		localStorage.removeItem('val_auth');
-		form.reset();
-		window.dispatchEvent(new CustomEvent('auth-updated'));
-		alert('Datos eliminados.');
+	mfaForm.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const code = document.getElementById('mfa-code').value;
+		setLoading(true);
+
+		try {
+			const result = await submitMfaCode(code);
+			handleAuthResult(result);
+		} catch (err) {
+			alert('Error MFA: ' + err.message);
+			setLoading(false);
+		}
 	});
+
+	backBtn.addEventListener('click', () => {
+		mfaForm.classList.add('hide');
+		loginForm.classList.remove('hide');
+		title.textContent = 'Iniciar Sesión';
+		subtitle.textContent = 'Usa tus credenciales de Riot Games.';
+	});
+
+	async function handleAuthResult(result) {
+		console.log('RSO Result:', result);
+
+		if (result.error === 'auth_failure') {
+			alert('Usuario o contraseña incorrectos.');
+			setLoading(false);
+			return;
+		}
+
+		if (result.type === 'mfa') {
+			loginForm.classList.add('hide');
+			mfaForm.classList.remove('hide');
+			title.textContent = 'Verificación Requerida';
+			subtitle.textContent = `Introduce el código enviado a ${result.mfa.email}.`;
+			setLoading(false);
+			return;
+		}
+
+		if (result.response && result.response.parameters && result.response.parameters.uri) {
+			try {
+				const { accessToken } = parseAuthParams(result.response.parameters.uri);
+				const entitlements = await getEntitlementsToken(accessToken);
+				const puuid = getPuuidFromToken(accessToken);
+
+				// Save to localStorage
+				localStorage.setItem('val_auth', JSON.stringify({
+					shard: currentShard,
+					puuid: puuid,
+					bearer: accessToken,
+					entitlements: entitlements
+				}));
+
+				window.dispatchEvent(new CustomEvent('auth-updated'));
+				setLoading(false);
+				alert('¡Sesión iniciada correctamente!');
+				
+				// Close form (optional, could be handled by parent)
+				document.getElementById('auth-section').classList.add('hide');
+			} catch (err) {
+				alert('Error al obtener tokens finales: ' + err.message);
+				setLoading(false);
+			}
+		} else {
+			alert('Error inesperado en la respuesta de Riot.');
+			setLoading(false);
+		}
+	}
+
+	function setLoading(isLoading) {
+		loading.classList.toggle('hide', !isLoading);
+		loginForm.style.opacity = isLoading ? '0.3' : '1';
+		loginForm.style.pointerEvents = isLoading ? 'none' : 'auto';
+		mfaForm.style.opacity = isLoading ? '0.3' : '1';
+		mfaForm.style.pointerEvents = isLoading ? 'none' : 'auto';
+	}
 </script>
