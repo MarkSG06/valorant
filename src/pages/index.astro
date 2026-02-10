@@ -1,7 +1,7 @@
----
 import Layout from '../layouts/Layout.astro';
 import StoreHeader from '../components/StoreHeader.astro';
 import StoreGrid from '../components/StoreGrid.astro';
+import AuthForm from '../components/AuthForm.astro';
 ---
 
 <Layout>
@@ -14,7 +14,12 @@ import StoreGrid from '../components/StoreGrid.astro';
 			<div class="hero-content">
 				<h1 class="main-title">Tu Tienda <span class="accent-text">Valorant</span></h1>
 				<p class="subtitle">Consulta tus skins diarias sin entrar al juego.</p>
+				<button id="toggle-auth" class="btn-toggle glass">Conectar Cuenta</button>
 			</div>
+		</div>
+
+		<div id="auth-section" class="hide">
+			<AuthForm />
 		</div>
 
 		<div class="animate-fade-in" style="animation-delay: 0.5s;">
@@ -28,6 +33,7 @@ import StoreGrid from '../components/StoreGrid.astro';
 </Layout>
 
 <style>
+	/* ... existing styles ... */
 	main {
 		min-height: 100vh;
 		padding-bottom: 4rem;
@@ -61,9 +67,26 @@ import StoreGrid from '../components/StoreGrid.astro';
 	.subtitle {
 		font-size: 1.2rem;
 		opacity: 0.7;
-		margin-top: 1rem;
+		margin: 1rem 0 2rem 0;
 		letter-spacing: 1px;
 	}
+
+	.btn-toggle {
+		padding: 0.8rem 2rem;
+		color: var(--val-white);
+		border: 1px solid var(--val-red);
+		cursor: pointer;
+		font-weight: 700;
+		text-transform: uppercase;
+		transition: all 0.3s;
+	}
+
+	.btn-toggle:hover {
+		background: var(--val-red);
+		box-shadow: 0 0 20px rgba(255, 70, 85, 0.4);
+	}
+
+	.hide { display: none; }
 
 	.footer-note {
 		text-align: center;
@@ -79,3 +102,13 @@ import StoreGrid from '../components/StoreGrid.astro';
 		}
 	}
 </style>
+
+<script>
+	const toggleBtn = document.getElementById('toggle-auth');
+	const authSection = document.getElementById('auth-section');
+
+	toggleBtn.addEventListener('click', () => {
+		authSection.classList.toggle('hide');
+		toggleBtn.textContent = authSection.classList.contains('hide') ? 'Conectar Cuenta' : 'Ocultar Formulario';
+	});
+</script>

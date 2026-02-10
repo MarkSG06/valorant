@@ -34,18 +34,23 @@ const dailySkins = [
 		<h2>Ofertas Diarias</h2>
 		<div class="timer">
 			<span class="label">Termina en:</span>
-			<span class="time accent-text">14:23:45</span>
+			<span class="time accent-text" id="store-timer">14:23:45</span>
 		</div>
 	</div>
 	
-	<div class="grid">
+	<div class="grid" id="skin-grid">
 		{dailySkins.map(skin => (
 			<SkinCard {...skin} />
 		))}
 	</div>
+
+	<div id="auth-status" class="status-msg hide">
+		<p>Sincronizado con tu cuenta real.</p>
+	</div>
 </section>
 
 <style>
+	/* ... existing styles ... */
 	.store-grid-container {
 		max-width: 1200px;
 		margin: 0 auto;
@@ -84,9 +89,18 @@ const dailySkins = [
 
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 		gap: 1.5rem;
 	}
+
+	.status-msg {
+		margin-top: 1rem;
+		text-align: center;
+		font-size: 0.8rem;
+		opacity: 0.5;
+	}
+
+	.hide { display: none; }
 
 	@media (max-width: 768px) {
 		.grid {
@@ -100,3 +114,81 @@ const dailySkins = [
 		}
 	}
 </style>
+
+<script>
+	import { getPlayerStorefront, getSkinsDetails } from '../lib/valorant.js';
+
+	const grid = document.getElementById('skin-grid');
+	const timerEl = document.getElementById('store-timer');
+	const statusEl = document.getElementById('auth-status');
+
+	async function updateStore() {
+		const auth = JSON.parse(localStorage.getItem('val_auth') || 'null');
+		if (!auth || !auth.bearer || !auth.entitlements) return;
+
+		try {
+			statusEl.classList.remove('hide');
+			statusEl.innerHTML = '<p class="accent-text">Sincronizando tienda real...</p>';
+			
+			const store = await getPlayerStorefront(auth.shard, auth.puuid, auth.bearer, auth.entitlements);
+			const offerUuids = store.SkinsPanelLayout.SingleItemOffers;
+			const remainingSeconds = store.SkinsPanelLayout.SingleItemOffersRemainingDurationInSeconds;
+			
+			// Update timer
+			updateTimer(remainingSeconds);
+
+			// Fetch skin details
+			const skins = await getSkinsDetails(offerUuids);
+			
+			// Render real skins
+			renderSkins(skins);
+			
+			statusEl.innerHTML = `<p>Sincronizado con la cuenta ${auth.puuid.substring(0, 8)}... (${auth.shard.toUpperCase()})</p>`;
+		} catch (err) {
+			console.error(err);
+			statusEl.innerHTML = `<p class="accent-text">Error al sincronizar: ${err.message}</p>`;
+		}
+	}
+
+	function renderSkins(skins) {
+		grid.innerHTML = skins.map(skin => `
+			<div class="skin-card glass animate-fade-in" style="--rarity-color: ${getRarityColor(skin.rarity)}">
+				<div class="rarity-bar" style="background-color: ${getRarityColor(skin.rarity)}; box-shadow: 0 0 10px ${getRarityColor(skin.rarity)}"></div>
+				<div class="image-container" style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 1rem; position: relative;">
+					<img src="${skin.image}" alt="${skin.name}" style="max-width: 90%; max-height: 80%; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5)); transition: transform 0.5s ease;" />
+				</div>
+				<div class="info" style="padding: 1rem; background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%); display: flex; justify-content: space-between; align-items: flex-end;">
+					<h3 class="name" style="margin: 0; font-size: 0.9rem; max-width: 70%; line-height: 1.2; color: white;">${skin.name}</h3>
+					<div class="price-tag" style="display: flex; align-items: center; gap: 4px; font-weight: 700; font-size: 1rem;">
+						<img src="https://media.valorant-api.com/currencies/85ad13f7-3d1b-5128-9eb2-7cd8ee0b1c89/displayicon.png" alt="VP" style="width: 18px; height: 18px;" />
+						<span>1775</span>
+					</div>
+				</div>
+			</div>
+		`).join('');
+	}
+
+	function getRarityColor(rarity) {
+		const colors = {
+			Select: '#00ccff',
+			Deluxe: '#00ff99',
+			Premium: '#d151ff',
+			Ultra: '#f9994c',
+			Exclusive: '#ff4655',
+		};
+		return colors[rarity] || '#ffffff';
+	}
+
+	function updateTimer(seconds) {
+		const h = Math.floor(seconds / 3600);
+		const m = Math.floor((seconds % 3600) / 60);
+		const s = seconds % 60;
+		timerEl.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+	}
+
+	// Listen for auth updates
+	window.addEventListener('auth-updated', updateStore);
+	
+	// Initial load
+	updateStore();
+</script>

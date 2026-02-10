@@ -1,0 +1,190 @@
+---
+---
+
+<div class="auth-container glass animate-fade-in" id="auth-form-container">
+	<div class="auth-header">
+		<h3>Conectar Cuenta</h3>
+		<p>Introduce tus tokens de Riot para ver tu tienda real.</p>
+	</div>
+	
+	<form id="auth-form">
+		<div class="input-group">
+			<label for="shard">Región (Shard)</label>
+			<select id="shard" required>
+				<option value="eu">EU (Europa)</option>
+				<option value="na">NA (Norteamérica)</option>
+				<option value="ap">AP (Asia-Pacífico)</option>
+				<option value="kr">KR (Corea)</option>
+				<option value="br">BR (Brasil)</option>
+				<option value="latam">LATAM (Latinoamérica)</option>
+			</select>
+		</div>
+
+		<div class="input-group">
+			<label for="puuid">Player UUID (PUUID)</label>
+			<input type="text" id="puuid" placeholder="Tu PUUID..." required />
+		</div>
+
+		<div class="input-group">
+			<label for="bearer">Bearer Token</label>
+			<textarea id="bearer" rows="3" placeholder="Comienza con eyJhbG..." required></textarea>
+		</div>
+
+		<div class="input-group">
+			<label for="entitlements">Entitlements Token</label>
+			<textarea id="entitlements" rows="3" placeholder="Comienza con eyJhbG..." required></textarea>
+		</div>
+
+		<div class="actions">
+			<button type="submit" class="btn-primary">Sincronizar Tienda</button>
+			<button type="button" id="clear-auth" class="btn-secondary">Limpiar Datos</button>
+		</div>
+	</form>
+
+	<div class="help-text">
+		<p>¿No sabes cómo conseguir los tokens? <a href="https://github.com/techchrism/valorant-api-docs" target="_blank">Consulta esta guía</a>.</p>
+	</div>
+</div>
+
+<style>
+	.auth-container {
+		max-width: 600px;
+		margin: 2rem auto;
+		padding: 2rem;
+	}
+
+	.auth-header {
+		margin-bottom: 2rem;
+		text-align: center;
+	}
+
+	.auth-header h3 {
+		margin: 0;
+		font-size: 1.2rem;
+		color: var(--val-red);
+	}
+
+	.auth-header p {
+		opacity: 0.6;
+		font-size: 0.9rem;
+	}
+
+	.input-group {
+		margin-bottom: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	label {
+		font-size: 0.8rem;
+		text-transform: uppercase;
+		font-weight: 700;
+		opacity: 0.8;
+	}
+
+	select, input, textarea {
+		background: rgba(0, 0, 0, 0.3);
+		border: 1px solid var(--val-border);
+		border-radius: 4px;
+		padding: 0.8rem;
+		color: var(--val-white);
+		font-family: inherit;
+		width: 100%;
+	}
+
+	select:focus, input:focus, textarea:focus {
+		outline: none;
+		border-color: var(--val-red);
+		box-shadow: 0 0 10px rgba(255, 70, 85, 0.2);
+	}
+
+	.actions {
+		display: flex;
+		gap: 1rem;
+		margin-top: 2rem;
+	}
+
+	button {
+		flex: 1;
+		padding: 1rem;
+		border-radius: 4px;
+		font-weight: 900;
+		text-transform: uppercase;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-family: inherit;
+	}
+
+	.btn-primary {
+		background: var(--val-red);
+		color: white;
+		border: none;
+	}
+
+	.btn-primary:hover {
+		background: #ff5e6a;
+		transform: translateY(-2px);
+		box-shadow: 0 5px 15px rgba(255, 70, 85, 0.4);
+	}
+
+	.btn-secondary {
+		background: transparent;
+		color: var(--val-white);
+		border: 1px solid var(--val-border);
+	}
+
+	.btn-secondary:hover {
+		background: rgba(255, 255, 255, 0.05);
+	}
+
+	.help-text {
+		margin-top: 1.5rem;
+		text-align: center;
+		font-size: 0.8rem;
+		opacity: 0.5;
+	}
+
+	.help-text a {
+		color: var(--val-red);
+		text-decoration: none;
+	}
+
+	.help-text a:hover {
+		text-decoration: underline;
+	}
+</style>
+
+<script>
+	const form = document.getElementById('auth-form');
+	const clearBtn = document.getElementById('clear-auth');
+
+	// Load existing data
+	window.addEventListener('DOMContentLoaded', () => {
+		const authData = JSON.parse(localStorage.getItem('val_auth') || '{}');
+		if (authData.shard) document.getElementById('shard').value = authData.shard;
+		if (authData.puuid) document.getElementById('puuid').value = authData.puuid;
+		if (authData.bearer) document.getElementById('bearer').value = authData.bearer;
+		if (authData.entitlements) document.getElementById('entitlements').value = authData.entitlements;
+	});
+
+	form.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const data = {
+			shard: document.getElementById('shard').value,
+			puuid: document.getElementById('puuid').value,
+			bearer: document.getElementById('bearer').value,
+			entitlements: document.getElementById('entitlements').value
+		};
+		localStorage.setItem('val_auth', JSON.stringify(data));
+		window.dispatchEvent(new CustomEvent('auth-updated'));
+		alert('¡Datos guardados! Intentando sincronizar...');
+	});
+
+	clearBtn.addEventListener('click', () => {
+		localStorage.removeItem('val_auth');
+		form.reset();
+		window.dispatchEvent(new CustomEvent('auth-updated'));
+		alert('Datos eliminados.');
+	});
+</script>
