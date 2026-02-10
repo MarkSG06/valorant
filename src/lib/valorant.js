@@ -1,27 +1,25 @@
 const VALORANT_API_BASE = 'https://valorant-api.com/v1';
 
 /**
- * Initiates the Riot login flow via our proxy
+ * Initiates the Riot login flow via our proxy (Unified Step)
  */
 export async function loginToRiot(username, password) {
-    // 1. Initialize session
-    await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'init' })
-    });
-
-    // 2. Submit credentials
+    // Submit credentials directly - proxy handles init internally
     const response = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'auth', username, password })
+        body: JSON.stringify({ type: 'login', username, password })
     });
 
     if (!response.ok) {
         const text = await response.text();
         console.error('Auth API Error:', text);
-        throw new Error(`Error del servidor (${response.status}): El endpoint no se encontró o falló.`);
+        try {
+            const errJson = JSON.parse(text);
+            throw new Error(errJson.error || `Error del servidor (${response.status})`);
+        } catch {
+            throw new Error(`Error del servidor (${response.status}): El endpoint no se encontró o falló.`);
+        }
     }
 
     return await response.json();

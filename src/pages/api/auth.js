@@ -1,15 +1,17 @@
 export const prerender = false;
 
 export const POST = async ({ request }) => {
-    console.log('API Auth hit with type:', request.method);
     try {
         const body = await request.json();
         const { type, ...data } = body;
 
-        // Use a persistent Cookie jar strategy (simplified for the proxy)
-        // In a real production app, we would manage session affinity better.
+        console.log(`[API Auth] Processing ${type} request...`);
 
-        if (type === 'init') {
+        // Consolidate Init + Auth to manage cookies internally in a single server hop
+        if (type === 'login') {
+            const { username, password } = data;
+
+            // 1. Init Session
             const initResponse = await fetch('https://auth.riotgames.com/api/v1/authorization', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -21,16 +23,13 @@ export const POST = async ({ request }) => {
                     scope: 'account openid'
                 })
             });
+
             const cookies = initResponse.headers.get('set-cookie');
-            return new Response(JSON.stringify({ success: true }), {
-                headers: { 'Set-Cookie': cookies, 'Content-Type': 'application/json' }
-            });
-        }
+            if (!cookies) {
+                return new Response(JSON.stringify({ error: 'Failed to initialize session (No cookies)' }), { status: 500 });
+            }
 
-        if (type === 'auth') {
-            const { username, password } = data;
-            const cookies = request.headers.get('cookie');
-
+            // 2. Auth with credentials
             const authResponse = await fetch('https://auth.riotgames.com/api/v1/authorization', {
                 method: 'PUT',
                 headers: {
@@ -43,8 +42,12 @@ export const POST = async ({ request }) => {
             const result = await authResponse.json();
             const setCookies = authResponse.headers.get('set-cookie');
 
+            // Send result and MFA cookies back to client
             return new Response(JSON.stringify(result), {
-                headers: { 'Set-Cookie': setCookies, 'Content-Type': 'application/json' }
+                headers: {
+                    'Set-Cookie': setCookies,
+                    'Content-Type': 'application/json'
+                }
             });
         }
 
@@ -62,16 +65,15 @@ export const POST = async ({ request }) => {
             });
 
             const result = await mfaResponse.json();
-            const setCookies = mfaResponse.headers.get('set-cookie');
-
             return new Response(JSON.stringify(result), {
-                headers: { 'Set-Cookie': setCookies, 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' }
             });
         }
 
         return new Response(JSON.stringify({ error: 'Invalid type' }), { status: 400 });
 
     } catch (err) {
+        console.error('[API Auth] Error:', err.message);
         return new Response(JSON.stringify({ error: err.message }), { status: 500 });
     }
 };
