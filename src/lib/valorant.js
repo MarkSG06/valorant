@@ -18,6 +18,12 @@ export async function loginToRiot(username, password) {
         body: JSON.stringify({ type: 'auth', username, password })
     });
 
+    if (!response.ok) {
+        const text = await response.text();
+        console.error('Auth API Error:', text);
+        throw new Error(`Error del servidor (${response.status}): El endpoint no se encontró o falló.`);
+    }
+
     return await response.json();
 }
 

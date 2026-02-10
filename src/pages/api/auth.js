@@ -1,4 +1,7 @@
+export const prerender = false;
+
 export const POST = async ({ request }) => {
+    console.log('API Auth hit with type:', request.method);
     try {
         const body = await request.json();
         const { type, ...data } = body;
